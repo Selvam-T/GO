@@ -1,0 +1,31 @@
+package main
+
+import ( "fmt")
+
+func swap(a *int, b *int) {
+	temp := *b
+	*b = *a
+	*a = temp
+}
+
+func incSlice(arr []int) {
+	for i := range arr {
+		arr[i]++	
+	}
+}
+
+func main() {
+	x := 10;
+	y := 20;
+	
+	/* swap 2 numbers */
+	fmt.Println(x,y)
+	swap(&x, &y)
+	fmt.Println(x,y)
+
+	/* Increment all elements of an array */
+	arr := []int{10, 20, 30}
+	fmt.Println(arr);
+	incSlice(arr)
+	fmt.Println(arr);
+}	

@@ -145,3 +145,20 @@ go run main.go
 
 - Slices.
 - Maps.
+
+### > conditional.go
+
+- if / else
+- switch
+
+### > loops.go
+
+- for
+- while (or like it)
+- infinite for
+
+### > pointers.go
+
+- function argument pass array by value
+- function argument pass array by address
+- function argument accepting a slice

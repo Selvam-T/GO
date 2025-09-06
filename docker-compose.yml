@@ -1,0 +1,9 @@
+services:
+  go-service:
+    build: .
+    image: ${IMAGE_NAME}
+    container_name: ${CONTAINER_NAME}
+    volumes:
+      - ./workspace:/usr/src/app
+    tty: true
+    stdin_open: true
