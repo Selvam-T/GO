@@ -162,3 +162,26 @@ go run main.go
 - function argument pass array by value
 - function argument pass array by address
 - function argument accepting a slice
+
+### > receiver_type.go
+
+- value receiver type method
+- pointer receiver type method
+
+### > err_handling1.go
+
+- built-in interface type called error for handling errors.
+
+### > interface.go
+
+- implement an interface
+- named interface
+- interface value
+- assertion
+
+### > hello-server.go
+
+- start a simple HTTP server on port 8080
+- http.HandleFunc()
+- read http.Request
+- from browser connect to http://localhost:8080/hello

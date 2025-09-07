@@ -2,7 +2,7 @@
 include .env
 export
 
-all:	build up shell
+launch:	build up shell
 
 build:
 	@echo "Building Go image..."
@@ -38,4 +38,4 @@ exit: down
 	@docker image rm -f ${IMAGE_NAME} || true
 	@echo "Go container and image removed."
 
-.PHONY: all build rebuild down up restart logs
+.PHONY: launch build rebuild down up restart logs
