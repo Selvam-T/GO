@@ -1,17 +1,17 @@
 package main
 
 import (
-	"io"
+	"fmt"
+	"io"	// provides interfaces and functions for reading, writing to various sources
 	"log"
 	"net/http"
 	"strings" // for splitting URL path
 )
 
-func main() {
-	// Hello world, the web server
-	
+func main() {	
 	helloHandler := func(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, "Hello, world\n")
+		fmt.Println(w.Header()) //able to print only header
 	}
 	
 	goodbyeHandler := func(w http.ResponseWriter, req *http.Request) {
@@ -56,10 +56,32 @@ func main() {
 	http.HandleFunc("/hello/", requestHandler) // use of http.Request
 	
 	log.Println("Attempting to start server on :8080")
+	// start server
 	err := http.ListenAndServe(":8080", nil)
-	if err == nil {
-		log.Printf("Failed to start server: %v\n", err)
-	} else {
+	if err != nil {
 		log.Fatal(err)
 	}
 }
+
+/* Notes on Go http components*/
+
+//  http.ListenAndServe() --> listens on specified TCP network address
+			// --> uses a handler to process incoming HTTP requests
+			// --> starts an HTTP server and runs indefinitely until shutdown
+			// --> forces developers to explicitly handle the server's termination
+			
+// http.HandleFunc() --> allows you to associate specific functions with different web server endpoints
+
+// http.ResponseWriter --> is an interface that specifies 3 methods
+			// --> Header(), returns header map that will be sent
+			// --> write([]byte) () - writes data to the connection as part of HTTP reply
+			// --> WriteHeader(statusCode int) - Sends HTTP response header w/ status code
+			// --> Therefore 'w' is the response construction mechanism
+// *http.Request --> pointer to an http.Request struct, containing method, URL path, headers, body
+
+// io.WriteString() --> send text data as part of an HTTP response back to the client
+
+// log.Println() vs fmt.Println() --> both will show messages on Terminal window
+				// --> but log.Println() adds timestamp and other prefixes
+				
+// log.Fatal() --> log error message and terminate with Exit(1)

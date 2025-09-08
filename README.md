@@ -181,7 +181,17 @@ go run main.go
 
 ### > hello-server.go
 
-- start a simple HTTP server on port 8080
+- http.ListenAndServe()
 - http.HandleFunc()
-- read http.Request
+- http.ResponseWriter
+- *http.Request
+- io.WriteString()
 - from browser connect to http://localhost:8080/hello
+
+### > server-project.go
+
+- in-memory CRUD API
+- Reading/writing JSON 
+- Handling GET, POST, DELETE 
+- Updating the in-memory slice safely 
+- Proper error handling and loggin
