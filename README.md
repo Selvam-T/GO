@@ -1,5 +1,14 @@
 ## 1. Docker as a self-contained Go development environment
-#### Trial setup
+#### Make commands
+
+```
+make build
+// build, run and bash
+```
+```
+make exit 
+// down, rm images
+```
 
 ### Dockerfile
 ```
@@ -186,7 +195,12 @@ go run main.go
 - http.ResponseWriter
 - *http.Request
 - io.WriteString()
-- from browser connect to http://localhost:8080/hello
+
+- 1. from browser connect to http://localhost:8080/hello
+- 2. curl commands:
+    - GET > curl http://localhost:8080/orders
+    - POST > curl -X POST http://localhost:8080/orders -d '{"id":1,"item":"Burger","quantity":2}' -H "Content-Type: application/json"
+    - DELETE > curl -X DELETE http://localhost:8080/orders -d '{"id":41}'
 
 ### > server-project.go
 
@@ -195,3 +209,25 @@ go run main.go
 - Handling GET, POST, DELETE 
 - Updating the in-memory slice safely 
 - Proper error handling and loggin
+
+## 5. Postgres Setup in the Go Container
+
+For this project, Postgres runs in the same container as the Go app. This makes setup simple and self-contained: the container starts Postgres and initializes the database automatically, letting you experiment with database/sql without managing multiple services.
+
+***Pros:***
+
+- Easy to run and test locally.
+- Quick iteration with Go code and SQL scripts.
+
+***Cons:***
+
+- Harder to scale or isolate the database.
+- Data management and backups are more complex.
+- Not suitable for production.
+
+***Implementation:***
+
+- Dockerfile installs Postgres and sets an entrypoint script to start it and run initialization scripts.
+- Docker Compose loads environment variables, mounts the workspace, exposes ports, and checks Postgres health.
+
+#### For production, Postgres should run in a separate container or service for isolation and scalability.

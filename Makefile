@@ -3,6 +3,7 @@ include .env
 export
 
 launch:	build up shell
+go:	build up shell
 
 build:
 	@echo "Building Go image..."
