@@ -2,27 +2,18 @@ FROM golang:1.25
 
 WORKDIR /usr/src/app
 
+# Install useful tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         nano \
         curl \
         git \
-        postgresql \
-        postgresql-contrib \
-        && rm -rf /var/lib/apt/lists/*
-        
-# Create directory for SQL scripts
-RUN mkdir -p /docker-entrypoint-initdb.d
+        postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy init SQL and entrypoint
-COPY init.sql /docker-entrypoint-initdb.d/init.sql
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Expose app port
+EXPOSE 8080
 
-# Expose ports
-EXPOSE 8080 5432
+# Default: keep container alive and allow interactive use
+CMD ["tail", "-f", "/dev/null"]
 
-# Run entrypoint
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-#CMD ["bash"]

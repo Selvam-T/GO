@@ -14,29 +14,50 @@ rebuild: down build up
 	@echo "Go container rebuilt and started."
 
 down:
-	@echo "Stopping Go container..."
+	@echo "Stopping Go containers..."
 	@docker compose down
-	@echo "Go container stopped."
+	@echo "Go containers stopped."
 
 up:
-	@echo "Starting Go container..."
-	@docker compose up -d
-	@echo "Go container started."
+	@echo "Starting Containers..."
+	#@docker compose up -d
+	@docker-compose up -d
+	@echo "Container started."
 
 restart: down up
-	@echo "Go container restarted."
+	@echo "Containers restarted."
 
-logs:
-	@echo "Fetching Go container logs..."
+logs:	
+	@echo "Fetching all container logs in the Compose project ..."
 	@docker compose logs -f
 	@echo "End of Go container logs."
 
+logs-db:
+	@echo "Fetching Postgres logs..."
+	@docker compose logs -f ${DB_SERVICE}
+
+logs-go:
+	@echo "Fetching Go service logs..."
+	@docker compose logs -f ${GO_SERVICE}
+
 shell:
-	@docker compose exec ${SERVICE_NAME} bash
+	@echo "+-----------------------------------+"
+	@echo "|              |                    |"
+	@echo "|              v                    |"
+	@echo "| You are inside the container now. |"
+	@echo "+-----------------------------------+"
+	@docker compose exec ${GO_SERVICE} bash
 
 exit: down
-	@echo "Removing Go container and image..."
-	@docker image rm -f ${IMAGE_NAME} || true
-	@echo "Go container and image removed."
+	@echo "Removing built images..."
+	@docker image rm -f ${GO_IMAGE_NAME} || true
+	@docker image rm -f ${DB_IMAGE_NAME} || true
+	@echo "Image removed."
+	
+prune:	exit
+	@echo "Cleaning up Docker build cache..."
+	@docker system prune -af || true
+	@docker volume prune -f
+	@echo "System and volume pruning done."
 
-.PHONY: launch build rebuild down up restart logs
+.PHONY: launch go build rebuild down up restart logs logs-db logs-go shell exit prune

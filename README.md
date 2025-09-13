@@ -1,121 +1,98 @@
-## 1. Docker as a self-contained Go development environment
-#### Make commands
+## 1. Docker Setup
 
-```
-make build
-// build, run and bash
-```
-```
-make exit 
-// down, rm images
-```
+### Go Development Container (go-service)
 
-### Dockerfile
-```
-FROM golang:1.25
+- Mounts host folder ./workspace to /workspace for live coding.
+- Provides Go environment and tools (go, git, nano, etc.).
+- Connects to Postgres using host db from Compose.
 
-WORKDIR /usr/src/app
+### Postgres Database Container (db)
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        nano && \
-    rm -rf /var/lib/apt/lists/*
+- Uses official postgres:15 image.
+- Persists data in host folder ./db_data.
+- Initializes database, user, and optional tables via /init/init.sql.
+- Exposes port 5432 for connectivity.
 
-CMD ["bash"]
-```
-### You can then build and run the Docker image:
-```
-docker build -t go-learning .
-docker run -it -v "$(pwd)/workspace":/usr/src/app go-learning
+### Docker Compose
 
-```
-## Inside the container create first program
+- docker compose up -d starts both containers.
+- docker compose exec go-service bash enters Go environment.
+- psql -h db -U <DB_USER> -d <DB_NAME> connects to database from Go container.
 
-```
-# Create a new Go file
-nano main.go
+### Makefile Commands
 
-# Example content
-package main
-import "fmt"
-func main() {
-    fmt.Println("Hello from Docker Go!")
-}
-```
-
-### Run it without creating go.mod
-```
-go run main.go
-```
-
-### Or create a module for more advanced experiments
-```
-go mod init myapp
-go run main.go
-```
-
-## 2. Development environment for a learning project
+- make build → build images
+- make up → start containers
+- make shell → enter Go container
+- make logs → view logs for all services
+- make down → stop containers
 
 ### Folder structure
 
 ```
-go-backend/
-│
-├─ Dockerfile
-├─ docker-compose.yml      # optional, for easier volume/network management
-├─ workspace/              # persistent volume for your Go code
-│   ├─ main.go             # starter main file (optional, can be empty)
-│   ├─ go.mod              # can be initialized inside container
-│   ├─ handlers/           # API handlers (e.g., HTTP routes)
-│   ├─ models/             # data structures / structs
-│   └─ utils/              # utility packages
+project-root/
+├── docker-compose.yml      # Docker Compose configuration for Go and Postgres
+├── Dockerfile              # Go development container image
+├── Makefile                # Build, up, shell, logs, and cleanup commands
+├── README.md               # Project overview and instructions
+├── db_data/                # Host folder for Postgres persistent data
+├── workspace/              # Host folder mounted into Go container for code
+└── init/                   # Database initialization scripts
+    ├── init.sh             # Shell script to run SQL/init tasks
+    └── init.sql            # SQL script to create database, users, tabless
 ```
 
 ### Dockerfile
 
-```
-# Use official Go image
-FROM golang:1.25
+#### The Dockerfile installs:
 
-# Set working directory inside the container
-WORKDIR /usr/src/app
+- Install:
+    - golang base image → Go compiler and tools
+    - nano, curl, git → useful development utilities
+    - postgresql-client → allows connecting to the Postgres database from the container via psql
+- CMD: 
+    - Keeps the container running so developers can docker exec into it.
+    - No Go application is started automatically; you run Go programs manually inside the container.
 
-# Install bash utilities (optional, for convenience)
-RUN apt-get update && apt-get install -y \
-    nano \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+#### Why there is no Dockerfile for Postgres
 
-# Default command: start a bash shell
-CMD ["bash"]
-```
-
-### docker-compose.yml
+- The Postgres container uses the official postgres:15 image from Docker Hub.
+- This image already contains a ready-to-run Postgres server.
+- Database initialization (creating the user, database, and optional tables) is handled by placing scripts in:
 
 ```
-version: "3.9"
-
-services:
-  go-learning:
-    build: .
-    container_name: go-learning
-    volumes:
-      - ./workspace:/usr/src/app
-    tty: true
-    stdin_open: true
+./init → /docker-entrypoint-initdb.d
 ```
-
-### Build and Run with docker-compose:
-```
-docker-compose run go-learning
-```
+- On first container startup, Postgres automatically runs these scripts; no custom Dockerfile is needed.
 
 ### Inside the container, initialize Go modules if needed:
 ```
 cd /usr/src/app
 go mod init foodpanda-backend
 ```
+
+### Test DB connection inside postgres container:
+
+```
+export PGPASSWORD=${DB_PASSWORD}
+psql -h db -U ${DB_USER} -d ${DB_NAME}
+```
+where, -h localhost, if you are connecting from the same container  
+or, -h db, if connecting from another container, and if service name in .yml is 'db'  
+
+### Alternative: jump directly into the Postgres containers
+```
+docker compose exec db psql -U ${DB_USER} -d ${DB_NAME}
+```
+
+### Useful psql commands
+
+\l .....................List all databases  
+\c go_db ...............Connect to go_db (you’re already connected)  
+\dt	....................List all tables in the current DB  
+\d table_name ..........Describe table structure  
+SELECT * FROM orders; ..Query all rows from the orders table  
+\q ....................Quit psql  
 
 #### go.mod explained
 - Tells Go this is a module and not just a random set of .go files.
@@ -130,7 +107,7 @@ go mod init foodpanda-backend
 go run main.go
 ```
 
-## 3. Core Focus Areas of study
+## 2. Core Focus Areas of study
 
 #### 1. REST APIs with net/http or frameworks (Gin/Fiber).
 #### 2. JSON handling (encoding/json for requests/responses).
@@ -140,7 +117,7 @@ go run main.go
 #### 6. Error handling (if err != nil idioms, wrapping).
 #### 7. Testing (testing package, table-driven tests).
 
-## 4. Topics learned
+## 3. Topics learned
 
 ### > json_parsing.go
 
@@ -210,24 +187,15 @@ go run main.go
 - Updating the in-memory slice safely 
 - Proper error handling and loggin
 
-## 5. Postgres Setup in the Go Container
+### > connectToDb.go
 
-For this project, Postgres runs in the same container as the Go app. This makes setup simple and self-contained: the container starts Postgres and initializes the database automatically, letting you experiment with database/sql without managing multiple services.
+- Reads environment variables for database connection
+- Opens a connection to the Postgres database
+- Checks the connection
 
-***Pros:***
-
-- Easy to run and test locally.
-- Quick iteration with Go code and SQL scripts.
-
-***Cons:***
-
-- Harder to scale or isolate the database.
-- Data management and backups are more complex.
-- Not suitable for production.
-
-***Implementation:***
-
-- Dockerfile installs Postgres and sets an entrypoint script to start it and run initialization scripts.
-- Docker Compose loads environment variables, mounts the workspace, exposes ports, and checks Postgres health.
-
-#### For production, Postgres should run in a separate container or service for isolation and scalability.
+#### You need a Postgres driver because Go’s standard database/sql package only defines generic database interfaces — it cannot communicate with Postgres by itself.  
+#### Inside the container, run:  
+```
+go get github.com/lib/pq
+go mod tidy
+```

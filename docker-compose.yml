@@ -1,19 +1,34 @@
 services:
   go-service:
     build: .
-    image: ${IMAGE_NAME}
-    container_name: ${CONTAINER_NAME}
-    env_file:
-      - .env  # Load .env into container
-    volumes:
-      - ./workspace:/usr/src/app
+    image: ${GO_IMAGE_NAME}
+    container_name: ${GO_CONTAINER_NAME}
     ports:
-      - "8080:${PORT}" # Go application port
-      - "5432:5432" # PostgreSQL port
-    tty: true
-    stdin_open: true
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "8080:${GO_PORT}"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - GO_PORT=${GO_PORT}
+    tty: true # Keep container running for interactive use
+    volumes:
+      - ./workspace:/usr/src/app/workspace
+
+  db:
+    image: ${DB_IMAGE_NAME}
+    container_name: ${DB_CONTAINER_NAME}
+    restart: always
+    environment:
+      - DB_HOST=${DB_HOST} # keep only for Go service
+      - DB_PORT=${DB_PORT} # keep only for Go service
+      - POSTGRES_USER=${DB_USER} # Postgres expects POSTGRES_ prefix
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      #- ./db_data:/var/lib/postgresql/data
+      - ./data:/data  # for csv files
+      - ./init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:${DB_PORT}"
